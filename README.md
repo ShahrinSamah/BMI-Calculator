@@ -1,0 +1,1 @@
+A simple BMI Calculator app built with Java in Android Studio as a team project. It helps users calculate and track their Body Mass Index with a clean, easy-to-use interface while allowing us to practice real-world Android app development and teamwork.
