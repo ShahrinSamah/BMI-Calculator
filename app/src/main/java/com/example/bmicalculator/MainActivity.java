@@ -1,6 +1,3 @@
-MainActivity.java
-
-
 package com.example.bmicalculator;
 
 import android.content.Intent;
