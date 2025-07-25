@@ -10,27 +10,28 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class MainActivity extends AppCompatActivity {
+public class bmiactivity extends AppCompatActivity {
 
 
-    android.widget.Button malculatebmi;
+    android.widget.Button mrecalculatbmi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
 
         getActionBar().hide();
+        mrecalculatbmi=findViewById(R.id.recalculatebmi);
 
-        malculatebmi=findViewById(R.id.calculatebmi);
-
-        malculatebmi.setOnClickListener(new View.OnClickListener() {
+        mrecalculatbmi.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,bmiactivity.class);
+            public void onClick(View v){
+                Intent intent = new Intent(bmiactivity.this,MainActivity.class);
                 startActivity(intent);
+                finish();
+
+
             }
-        });
+        });;
     }
 }
