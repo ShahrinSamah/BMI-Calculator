@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Html;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -13,7 +12,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class bmiactivity extends AppCompatActivity {
+public class BmiActivity extends AppCompatActivity {
 
     Button mrecalculatbmi;
     TextView mbmidisplay, mbmicateogory, mgender;
@@ -78,7 +77,7 @@ public class bmiactivity extends AppCompatActivity {
         }
 
         mrecalculatbmi.setOnClickListener(v -> {
-            Intent i = new Intent(bmiactivity.this, MainActivity.class);
+            Intent i = new Intent(BmiActivity.this, MainActivity.class);
             startActivity(i);
             finish();
         });
