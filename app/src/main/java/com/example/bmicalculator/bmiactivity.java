@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Html;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -12,90 +13,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.ArrayList;
-import java.util.List;
-
-// Observer Interface
-interface BMIObserver {
-    void update(float bmi, String category);
-}
-
-// Concrete Observers
-class BMITextViewObserver implements BMIObserver {
-    private TextView bmiDisplay, categoryDisplay, genderDisplay;
-    private String gender;
-
-    public BMITextViewObserver(TextView bmiDisplay, TextView categoryDisplay, TextView genderDisplay, String gender) {
-        this.bmiDisplay = bmiDisplay;
-        this.categoryDisplay = categoryDisplay;
-        this.genderDisplay = genderDisplay;
-        this.gender = gender;
-    }
-
-    @Override
-    public void update(float bmi, String category) {
-        bmiDisplay.setText(String.format("%.2f", bmi));
-        categoryDisplay.setText(category);
-        genderDisplay.setText(gender);
-    }
-}
-
-class BMIUIObserver implements BMIObserver {
-    private ImageView imageView;
-    private RelativeLayout background;
-
-    public BMIUIObserver(ImageView imageView, RelativeLayout background) {
-        this.imageView = imageView;
-        this.background = background;
-    }
-
-    @Override
-    public void update(float bmi, String category) {
-        // Update UI based on category
-        switch (category) {
-            case "Severe Thinness":
-            case "Moderate Thinness":
-            case "Mild Thinness":
-                background.setBackgroundColor(Color.RED);
-                imageView.setImageResource(R.drawable.warning2);
-                break;
-            case "Normal":
-                background.setBackgroundColor(Color.GREEN);
-                imageView.setImageResource(R.drawable.ok1);
-                break;
-            case "Overweight":
-            case "Obese Class I":
-                background.setBackgroundColor(Color.RED);
-                imageView.setImageResource(R.drawable.warning2);
-                break;
-        }
-    }
-}
-
-// Subject Class
-class BMISubject {
-    private List<BMIObserver> observers = new ArrayList<>();
-    private float bmi;
-    private String category;
-
-    public void attach(BMIObserver observer) {
-        observers.add(observer);
-    }
-
-    public void setBMI(float bmi, String category) {
-        this.bmi = bmi;
-        this.category = category;
-        notifyObservers();
-    }
-
-    private void notifyObservers() {
-        for (BMIObserver observer : observers) {
-            observer.update(bmi, category);
-        }
-    }
-}
-
-public class BmiActivity extends AppCompatActivity {
+public class bmiactivity extends AppCompatActivity {
 
     Button mrecalculatbmi;
     TextView mbmidisplay, mbmicateogory, mgender;
@@ -127,20 +45,40 @@ public class BmiActivity extends AppCompatActivity {
 
         float intheight = Float.parseFloat(height) / 100f;
         float intweight = Float.parseFloat(weight);
+        float intbmi = intweight / (intheight * intheight);
+        String mbmi = String.format("%.2f", intbmi);
 
-        BMICalculator calculator = BMICalculator.getInstance();
-        float intbmi = calculator.calculateBMI(intheight * 100, intweight);
-        String category = calculator.getBMICategory(intbmi);
+        mbmidisplay.setText(mbmi);
+        mgender.setText(gender);
 
-        // Observer pattern setup
-        BMISubject bmiSubject = new BMISubject();
-        bmiSubject.attach(new BMITextViewObserver(mbmidisplay, mbmicateogory, mgender, gender));
-        bmiSubject.attach(new BMIUIObserver(mimageview, mbackground));
-
-        bmiSubject.setBMI(intbmi, category); // Notifies observers to update UI
+        if (intbmi < 16) {
+            mbmicateogory.setText("Severe Thinness");
+            mbackground.setBackgroundColor(Color.RED);
+            mimageview.setImageResource(R.drawable.cross2);
+        } else if (intbmi >= 16 && intbmi < 17) {
+            mbmicateogory.setText("Moderate Thinness");
+            mbackground.setBackgroundColor(Color.RED);
+            mimageview.setImageResource(R.drawable.warning2);
+        } else if (intbmi >= 17 && intbmi < 18.5) {
+            mbmicateogory.setText("Mild Thinness");
+            mbackground.setBackgroundColor(Color.RED);
+            mimageview.setImageResource(R.drawable.warning2);
+        } else if (intbmi >= 18.5 && intbmi < 25) {
+            mbmicateogory.setText("Normal");
+            mbackground.setBackgroundColor(Color.GREEN);
+            mimageview.setImageResource(R.drawable.ok1);
+        } else if (intbmi >= 25 && intbmi < 30) {
+            mbmicateogory.setText("Overweight");
+            mbackground.setBackgroundColor(Color.YELLOW);
+            mimageview.setImageResource(R.drawable.warning2);
+        } else {
+            mbmicateogory.setText("Obese Class I");
+            mbackground.setBackgroundColor(Color.RED);
+            mimageview.setImageResource(R.drawable.warning2);
+        }
 
         mrecalculatbmi.setOnClickListener(v -> {
-            Intent i = new Intent(BmiActivity.this, MainActivity.class);
+            Intent i = new Intent(bmiactivity.this, MainActivity.class);
             startActivity(i);
             finish();
         });
