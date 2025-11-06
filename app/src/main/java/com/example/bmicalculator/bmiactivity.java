@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Html;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -13,12 +12,92 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class bmiactivity extends AppCompatActivity {
+public class BmiActivity extends AppCompatActivity {
 
     Button mrecalculatbmi;
     TextView mbmidisplay, mbmicateogory, mgender;
     ImageView mimageview;
     RelativeLayout mbackground;
+
+    //FACADE PATTERN (Inner Class)
+    // This class hides complex BMI operations behind a simple interface.
+    private static class BmiFacade {
+        private final float height;
+        private final float weight;
+        private final String gender;
+
+        // Constructor takes height, weight, gender
+        BmiFacade(String height, String weight, String gender) {
+            this.height = Float.parseFloat(height) / 100f;
+            this.weight = Float.parseFloat(weight);
+            this.gender = gender;
+        }
+
+        // Performs BMI calculation
+        float calculateBmi() {
+            return weight / (height * height);
+        }
+
+        // Returns correct Strategy object based on BMI value
+        BmiCategoryStrategy getCategoryStrategy(float bmi) {
+            if (bmi < 16) return new SevereThinnessStrategy();
+            else if (bmi < 17) return new ModerateThinnessStrategy();
+            else if (bmi < 18.5) return new MildThinnessStrategy();
+            else if (bmi < 25) return new NormalStrategy();
+            else if (bmi < 30) return new OverweightStrategy();
+            else return new ObeseStrategy();
+        }
+    }
+
+
+    //STRATEGY PATTERN (Inner Interface + Classes)
+    // Interface defines common behavior for different BMI ranges.
+
+    private interface BmiCategoryStrategy {
+        String getCategory();
+        int getBackgroundColor();
+        int getImageResource();
+    }
+
+    // Each concrete class represents one BMI category with its behavior.
+    private static class SevereThinnessStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Severe Thinness"; }
+        public int getBackgroundColor() { return Color.RED; }
+        public int getImageResource() { return R.drawable.cross2; }
+    }
+
+    private static class ModerateThinnessStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Moderate Thinness"; }
+        public int getBackgroundColor() { return Color.RED; }
+        public int getImageResource() { return R.drawable.warning2; }
+    }
+
+    private static class MildThinnessStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Mild Thinness"; }
+        public int getBackgroundColor() { return Color.RED; }
+        public int getImageResource() { return R.drawable.warning2; }
+    }
+
+    private static class NormalStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Normal"; }
+        public int getBackgroundColor() { return Color.GREEN; }
+        public int getImageResource() { return R.drawable.ok1; }
+    }
+
+    private static class OverweightStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Overweight"; }
+        public int getBackgroundColor() { return Color.YELLOW; }
+        public int getImageResource() { return R.drawable.warning2; }
+    }
+
+    private static class ObeseStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Obese Class I"; }
+        public int getBackgroundColor() { return Color.RED; }
+        public int getImageResource() { return R.drawable.warning2; }
+    }
+
+
+    // onCreate Method (Main Logic)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +110,7 @@ public class bmiactivity extends AppCompatActivity {
             getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1E1D1D")));
         }
 
+        // Linking UI elements
         mbmidisplay = findViewById(R.id.bmidisplay);
         mbmicateogory = findViewById(R.id.bmicategory);
         mgender = findViewById(R.id.genderdisplay);
@@ -38,47 +118,32 @@ public class bmiactivity extends AppCompatActivity {
         mimageview = findViewById(R.id.imageview);
         mrecalculatbmi = findViewById(R.id.recalculatebmi);
 
+        // Get values from MainActivity
         Intent intent = getIntent();
         String height = intent.getStringExtra("height");
         String weight = intent.getStringExtra("weight");
         String gender = intent.getStringExtra("gender");
 
-        float intheight = Float.parseFloat(height) / 100f;
-        float intweight = Float.parseFloat(weight);
-        float intbmi = intweight / (intheight * intheight);
-        String mbmi = String.format("%.2f", intbmi);
+        //Use the Facade class for BMI calculation
+        BmiFacade bmiFacade = new BmiFacade(height, weight, gender);
 
-        mbmidisplay.setText(mbmi);
+        // Calculate BMI and format result
+        float bmiValue = bmiFacade.calculateBmi();
+        String bmiText = String.format("%.2f", bmiValue);
+
+        //Get the correct strategy object for this BMI range
+        BmiCategoryStrategy strategy = bmiFacade.getCategoryStrategy(bmiValue);
+
+        // Display everything using the chosen strategy
+        mbmidisplay.setText(bmiText);
         mgender.setText(gender);
+        mbmicateogory.setText(strategy.getCategory());
+        mbackground.setBackgroundColor(strategy.getBackgroundColor());
+        mimageview.setImageResource(strategy.getImageResource());
 
-        if (intbmi < 16) {
-            mbmicateogory.setText("Severe Thinness");
-            mbackground.setBackgroundColor(Color.RED);
-            mimageview.setImageResource(R.drawable.cross2);
-        } else if (intbmi >= 16 && intbmi < 17) {
-            mbmicateogory.setText("Moderate Thinness");
-            mbackground.setBackgroundColor(Color.RED);
-            mimageview.setImageResource(R.drawable.warning2);
-        } else if (intbmi >= 17 && intbmi < 18.5) {
-            mbmicateogory.setText("Mild Thinness");
-            mbackground.setBackgroundColor(Color.RED);
-            mimageview.setImageResource(R.drawable.warning2);
-        } else if (intbmi >= 18.5 && intbmi < 25) {
-            mbmicateogory.setText("Normal");
-            mbackground.setBackgroundColor(Color.GREEN);
-            mimageview.setImageResource(R.drawable.ok1);
-        } else if (intbmi >= 25 && intbmi < 30) {
-            mbmicateogory.setText("Overweight");
-            mbackground.setBackgroundColor(Color.YELLOW);
-            mimageview.setImageResource(R.drawable.warning2);
-        } else {
-            mbmicateogory.setText("Obese Class I");
-            mbackground.setBackgroundColor(Color.RED);
-            mimageview.setImageResource(R.drawable.warning2);
-        }
-
+        // Button click to go back to main screen
         mrecalculatbmi.setOnClickListener(v -> {
-            Intent i = new Intent(bmiactivity.this, MainActivity.class);
+            Intent i = new Intent(BmiActivity.this, MainActivity.class);
             startActivity(i);
             finish();
         });
