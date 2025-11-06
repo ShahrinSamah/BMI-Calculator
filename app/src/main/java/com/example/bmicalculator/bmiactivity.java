@@ -12,95 +12,92 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.ArrayList;
-import java.util.List;
-
-// Observer Interface
-interface BMIObserver {
-    void update(float bmi, String category);
-}
-
-// Concrete Observers
-class BMITextViewObserver implements BMIObserver {
-    private TextView bmiDisplay, categoryDisplay, genderDisplay;
-    private String gender;
-
-    public BMITextViewObserver(TextView bmiDisplay, TextView categoryDisplay, TextView genderDisplay, String gender) {
-        this.bmiDisplay = bmiDisplay;
-        this.categoryDisplay = categoryDisplay;
-        this.genderDisplay = genderDisplay;
-        this.gender = gender;
-    }
-
-    @Override
-    public void update(float bmi, String category) {
-        bmiDisplay.setText(String.format("%.2f", bmi));
-        categoryDisplay.setText(category);
-        genderDisplay.setText(gender);
-    }
-}
-
-class BMIUIObserver implements BMIObserver {
-    private ImageView imageView;
-    private RelativeLayout background;
-
-    public BMIUIObserver(ImageView imageView, RelativeLayout background) {
-        this.imageView = imageView;
-        this.background = background;
-    }
-
-    @Override
-    public void update(float bmi, String category) {
-        // Update UI based on category
-        switch (category) {
-            case "Severe Thinness":
-            case "Moderate Thinness":
-            case "Mild Thinness":
-                background.setBackgroundColor(Color.RED);
-                imageView.setImageResource(R.drawable.warning2);
-                break;
-            case "Normal":
-                background.setBackgroundColor(Color.GREEN);
-                imageView.setImageResource(R.drawable.ok1);
-                break;
-            case "Overweight":
-            case "Obese Class I":
-                background.setBackgroundColor(Color.RED);
-                imageView.setImageResource(R.drawable.warning2);
-                break;
-        }
-    }
-}
-
-// Subject Class
-class BMISubject {
-    private List<BMIObserver> observers = new ArrayList<>();
-    private float bmi;
-    private String category;
-
-    public void attach(BMIObserver observer) {
-        observers.add(observer);
-    }
-
-    public void setBMI(float bmi, String category) {
-        this.bmi = bmi;
-        this.category = category;
-        notifyObservers();
-    }
-
-    private void notifyObservers() {
-        for (BMIObserver observer : observers) {
-            observer.update(bmi, category);
-        }
-    }
-}
-
 public class BmiActivity extends AppCompatActivity {
 
     Button mrecalculatbmi;
     TextView mbmidisplay, mbmicateogory, mgender;
     ImageView mimageview;
     RelativeLayout mbackground;
+
+    //FACADE PATTERN (Inner Class)
+    // This class hides complex BMI operations behind a simple interface.
+    private static class BmiFacade {
+        private final float height;
+        private final float weight;
+        private final String gender;
+
+        // Constructor takes height, weight, gender
+        BmiFacade(String height, String weight, String gender) {
+            this.height = Float.parseFloat(height) / 100f;
+            this.weight = Float.parseFloat(weight);
+            this.gender = gender;
+        }
+
+        // Performs BMI calculation
+        float calculateBmi() {
+            return weight / (height * height);
+        }
+
+        // Returns correct Strategy object based on BMI value
+        BmiCategoryStrategy getCategoryStrategy(float bmi) {
+            if (bmi < 16) return new SevereThinnessStrategy();
+            else if (bmi < 17) return new ModerateThinnessStrategy();
+            else if (bmi < 18.5) return new MildThinnessStrategy();
+            else if (bmi < 25) return new NormalStrategy();
+            else if (bmi < 30) return new OverweightStrategy();
+            else return new ObeseStrategy();
+        }
+    }
+
+
+    //STRATEGY PATTERN (Inner Interface + Classes)
+    // Interface defines common behavior for different BMI ranges.
+
+    private interface BmiCategoryStrategy {
+        String getCategory();
+        int getBackgroundColor();
+        int getImageResource();
+    }
+
+    // Each concrete class represents one BMI category with its behavior.
+    private static class SevereThinnessStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Severe Thinness"; }
+        public int getBackgroundColor() { return Color.RED; }
+        public int getImageResource() { return R.drawable.cross2; }
+    }
+
+    private static class ModerateThinnessStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Moderate Thinness"; }
+        public int getBackgroundColor() { return Color.RED; }
+        public int getImageResource() { return R.drawable.warning2; }
+    }
+
+    private static class MildThinnessStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Mild Thinness"; }
+        public int getBackgroundColor() { return Color.RED; }
+        public int getImageResource() { return R.drawable.warning2; }
+    }
+
+    private static class NormalStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Normal"; }
+        public int getBackgroundColor() { return Color.GREEN; }
+        public int getImageResource() { return R.drawable.ok1; }
+    }
+
+    private static class OverweightStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Overweight"; }
+        public int getBackgroundColor() { return Color.YELLOW; }
+        public int getImageResource() { return R.drawable.warning2; }
+    }
+
+    private static class ObeseStrategy implements BmiCategoryStrategy {
+        public String getCategory() { return "Obese Class I"; }
+        public int getBackgroundColor() { return Color.RED; }
+        public int getImageResource() { return R.drawable.warning2; }
+    }
+
+
+    // onCreate Method (Main Logic)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +110,7 @@ public class BmiActivity extends AppCompatActivity {
             getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1E1D1D")));
         }
 
+        // Linking UI elements
         mbmidisplay = findViewById(R.id.bmidisplay);
         mbmicateogory = findViewById(R.id.bmicategory);
         mgender = findViewById(R.id.genderdisplay);
@@ -120,25 +118,30 @@ public class BmiActivity extends AppCompatActivity {
         mimageview = findViewById(R.id.imageview);
         mrecalculatbmi = findViewById(R.id.recalculatebmi);
 
+        // Get values from MainActivity
         Intent intent = getIntent();
         String height = intent.getStringExtra("height");
         String weight = intent.getStringExtra("weight");
         String gender = intent.getStringExtra("gender");
 
-        float intheight = Float.parseFloat(height) / 100f;
-        float intweight = Float.parseFloat(weight);
+        //Use the Facade class for BMI calculation
+        BmiFacade bmiFacade = new BmiFacade(height, weight, gender);
 
-        BMICalculator calculator = BMICalculator.getInstance();
-        float intbmi = calculator.calculateBMI(intheight * 100, intweight);
-        String category = calculator.getBMICategory(intbmi);
+        // Calculate BMI and format result
+        float bmiValue = bmiFacade.calculateBmi();
+        String bmiText = String.format("%.2f", bmiValue);
 
-        // Observer pattern setup
-        BMISubject bmiSubject = new BMISubject();
-        bmiSubject.attach(new BMITextViewObserver(mbmidisplay, mbmicateogory, mgender, gender));
-        bmiSubject.attach(new BMIUIObserver(mimageview, mbackground));
+        //Get the correct strategy object for this BMI range
+        BmiCategoryStrategy strategy = bmiFacade.getCategoryStrategy(bmiValue);
 
-        bmiSubject.setBMI(intbmi, category); // Notifies observers to update UI
+        // Display everything using the chosen strategy
+        mbmidisplay.setText(bmiText);
+        mgender.setText(gender);
+        mbmicateogory.setText(strategy.getCategory());
+        mbackground.setBackgroundColor(strategy.getBackgroundColor());
+        mimageview.setImageResource(strategy.getImageResource());
 
+        // Button click to go back to main screen
         mrecalculatbmi.setOnClickListener(v -> {
             Intent i = new Intent(BmiActivity.this, MainActivity.class);
             startActivity(i);
