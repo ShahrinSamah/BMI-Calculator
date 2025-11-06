@@ -20,25 +20,21 @@ public class BmiActivity extends AppCompatActivity {
     RelativeLayout mbackground;
 
     //FACADE PATTERN (Inner Class)
-    // This class hides complex BMI operations behind a simple interface.
     private static class BmiFacade {
         private final float height;
         private final float weight;
         private final String gender;
 
-        // Constructor takes height, weight, gender
         BmiFacade(String height, String weight, String gender) {
             this.height = Float.parseFloat(height) / 100f;
             this.weight = Float.parseFloat(weight);
             this.gender = gender;
         }
 
-        // Performs BMI calculation
         float calculateBmi() {
             return weight / (height * height);
         }
 
-        // Returns correct Strategy object based on BMI value
         BmiCategoryStrategy getCategoryStrategy(float bmi) {
             if (bmi < 16) return new SevereThinnessStrategy();
             else if (bmi < 17) return new ModerateThinnessStrategy();
@@ -51,7 +47,6 @@ public class BmiActivity extends AppCompatActivity {
 
 
     //STRATEGY PATTERN (Inner Interface + Classes)
-    // Interface defines common behavior for different BMI ranges.
 
     private interface BmiCategoryStrategy {
         String getCategory();
@@ -59,7 +54,6 @@ public class BmiActivity extends AppCompatActivity {
         int getImageResource();
     }
 
-    // Each concrete class represents one BMI category with its behavior.
     private static class SevereThinnessStrategy implements BmiCategoryStrategy {
         public String getCategory() { return "Severe Thinness"; }
         public int getBackgroundColor() { return Color.RED; }
@@ -97,7 +91,6 @@ public class BmiActivity extends AppCompatActivity {
     }
 
 
-    // onCreate Method (Main Logic)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +103,6 @@ public class BmiActivity extends AppCompatActivity {
             getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1E1D1D")));
         }
 
-        // Linking UI elements
         mbmidisplay = findViewById(R.id.bmidisplay);
         mbmicateogory = findViewById(R.id.bmicategory);
         mgender = findViewById(R.id.genderdisplay);
@@ -118,30 +110,24 @@ public class BmiActivity extends AppCompatActivity {
         mimageview = findViewById(R.id.imageview);
         mrecalculatbmi = findViewById(R.id.recalculatebmi);
 
-        // Get values from MainActivity
         Intent intent = getIntent();
         String height = intent.getStringExtra("height");
         String weight = intent.getStringExtra("weight");
         String gender = intent.getStringExtra("gender");
 
-        //Use the Facade class for BMI calculation
         BmiFacade bmiFacade = new BmiFacade(height, weight, gender);
 
-        // Calculate BMI and format result
         float bmiValue = bmiFacade.calculateBmi();
         String bmiText = String.format("%.2f", bmiValue);
 
-        //Get the correct strategy object for this BMI range
         BmiCategoryStrategy strategy = bmiFacade.getCategoryStrategy(bmiValue);
 
-        // Display everything using the chosen strategy
         mbmidisplay.setText(bmiText);
         mgender.setText(gender);
         mbmicateogory.setText(strategy.getCategory());
         mbackground.setBackgroundColor(strategy.getBackgroundColor());
         mimageview.setImageResource(strategy.getImageResource());
 
-        // Button click to go back to main screen
         mrecalculatbmi.setOnClickListener(v -> {
             Intent i = new Intent(BmiActivity.this, MainActivity.class);
             startActivity(i);
