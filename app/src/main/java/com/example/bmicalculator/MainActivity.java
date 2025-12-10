@@ -2,37 +2,341 @@ package com.example.bmicalculator;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import java.util.ArrayList;
+import java.util.List;
 
+// ==================== 1. COMMAND PATTERN ====================
+interface Command {
+    void execute();
+}
+
+class IncrementAgeCommand implements Command {
+    private MainActivity activity;
+    public IncrementAgeCommand(MainActivity activity) { 
+        this.activity = activity; 
+    }
+    
+    @Override 
+    public void execute() { 
+        activity.incrementAge(); 
+    }
+}
+
+class DecrementAgeCommand implements Command {
+    private MainActivity activity;
+    public DecrementAgeCommand(MainActivity activity) { 
+        this.activity = activity; 
+    }
+    
+    @Override 
+    public void execute() { 
+        activity.decrementAge(); 
+    }
+}
+
+class IncrementWeightCommand implements Command {
+    private MainActivity activity;
+    public IncrementWeightCommand(MainActivity activity) { 
+        this.activity = activity; 
+    }
+    
+    @Override 
+    public void execute() { 
+        activity.incrementWeight(); 
+    }
+}
+
+class DecrementWeightCommand implements Command {
+    private MainActivity activity;
+    public DecrementWeightCommand(MainActivity activity) { 
+        this.activity = activity; 
+    }
+    
+    @Override 
+    public void execute() { 
+        activity.decrementWeight(); 
+    }
+}
+
+class CalculateBMICommand implements Command {
+    private MainActivity activity;
+    public CalculateBMICommand(MainActivity activity) { 
+        this.activity = activity; 
+    }
+    
+    @Override 
+    public void execute() { 
+        activity.calculateAndNavigate(); 
+    }
+}
+
+// Invoker — exactly like Waiter in teacher's example
+class ButtonCommandInvoker {
+    private Command command;
+    
+    public void setCommand(Command command) { 
+        this.command = command; 
+    }
+    
+    public void executeCommand() { 
+        if (command != null) {
+            command.execute(); 
+        }
+    }
+}
+
+// ==================== 2. STRATEGY PATTERN ====================
+interface GenderStrategy {
+    String getGenderName();
+}
+
+class MaleStrategy implements GenderStrategy {
+    @Override 
+    public String getGenderName() { 
+        return "Male"; 
+    }
+}
+
+class FemaleStrategy implements GenderStrategy {
+    @Override 
+    public String getGenderName() { 
+        return "Female"; 
+    }
+}
+
+// ==================== 3. OBSERVER PATTERN ====================
+interface Subject {
+    void registerObserver(Observer o);
+    void removeObserver(Observer o);
+    void notifyObservers();
+}
+
+interface Observer {
+    void update(int age, int weight, int height, String gender);
+}
+
+// Concrete Subject 
+class UserInputData implements Subject {
+    private List<Observer> observers = new ArrayList<>();
+    private int age = 22;
+    private int weight = 55;
+    private int height = 170;
+    private String gender = "0";
+
+    @Override 
+    public void registerObserver(Observer o) { 
+        if (o != null && !observers.contains(o)) {
+            observers.add(o); 
+        }
+    }
+    
+    @Override 
+    public void removeObserver(Observer o) { 
+        if (o != null) {
+            observers.remove(o); 
+        }
+    }
+    
+    @Override 
+    public void notifyObservers() {
+        for (Observer o : observers) {
+            if (o != null) {
+                o.update(age, weight, height, gender);
+            }
+        }
+    }
+
+    // Setters that notify observers
+    public void setAge(int age) { 
+        this.age = age; 
+        notifyObservers(); 
+    }
+    
+    public void setWeight(int weight) { 
+        this.weight = weight; 
+        notifyObservers(); 
+    }
+    
+    public void setHeight(int height) { 
+        this.height = height; 
+        notifyObservers(); 
+    }
+    
+    public void setGender(String gender) { 
+        this.gender = gender; 
+        notifyObservers(); 
+    }
+
+    public int getAge() { 
+        return age; 
+    }
+    
+    public int getWeight() { 
+        return weight; 
+    }
+    
+    public int getHeight() { 
+        return height; 
+    }
+    
+    public String getGender() { 
+        return gender; 
+    }
+}
+
+// Concrete Observer — updates UI
+class UIObserver implements Observer {
+    private MainActivity activity;
+    
+    public UIObserver(MainActivity activity) { 
+        this.activity = activity; 
+    }
+    
+    @Override
+    public void update(int age, int weight, int height, String gender) {
+        // Update UI with null checks
+        if (activity.mcurrentage != null) {
+            activity.mcurrentage.setText(String.valueOf(age));
+        }
+        if (activity.mcurrentweight != null) {
+            activity.mcurrentweight.setText(String.valueOf(weight));
+        }
+        if (activity.mcurrentheight != null) {
+            activity.mcurrentheight.setText(String.valueOf(height));
+        }
+        activity.updateGenderBackground(gender);
+    }
+}
+
+// ==================== 4. FACADE PATTERN ====================
+class MainFacade {
+    private UserInputData data;
+    private GenderStrategy strategy;
+
+    public MainFacade() {
+        this.data = new UserInputData();
+        this.strategy = null;
+    }
+
+    public void setGenderStrategy(GenderStrategy strategy) {
+        this.strategy = strategy;
+        if (strategy != null) {
+            data.setGender(strategy.getGenderName());
+        }
+    }
+
+    public UserInputData getData() { 
+        return data; 
+    }
+    
+    public String getGender() { 
+        return strategy != null ? strategy.getGenderName() : "0"; 
+    }
+
+    public boolean validateAndLaunchBmiActivity(MainActivity activity) {
+        if (activity == null) {
+            return false;
+        }
+        
+        if (getGender().equals("0")) {
+            Toast.makeText(activity, "Select Your Gender First", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (data.getHeight() == 0) {
+            Toast.makeText(activity, "Select Your Height First", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (data.getAge() <= 0) {
+            Toast.makeText(activity, "Age Is Incorrect", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (data.getWeight() <= 0) {
+            Toast.makeText(activity, "Weight Is Incorrect", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        Intent intent = new Intent(activity, BmiActivity.class);
+        intent.putExtra("gender", getGender());
+        intent.putExtra("height", String.valueOf(data.getHeight()));
+        intent.putExtra("weight", String.valueOf(data.getWeight()));
+        activity.startActivity(intent);
+        return true;
+    }
+}
+
+// ==================== 5. FACTORY PATTERN ====================
+class CommandFactory {
+    private MainActivity activity;
+    
+    public CommandFactory(MainActivity activity) { 
+        this.activity = activity; 
+    }
+
+    public Command createCommand(String type) {
+        if (type == null || activity == null) {
+            return null;
+        }
+        
+        switch (type) {
+            case "increment_age":
+                return new IncrementAgeCommand(activity);
+            case "decrement_age":
+                return new DecrementAgeCommand(activity);
+            case "increment_weight":
+                return new IncrementWeightCommand(activity);
+            case "decrement_weight":
+                return new DecrementWeightCommand(activity);
+            case "calculate":
+                return new CalculateBMICommand(activity);
+            default:
+                return null;
+        }
+    }
+}
+
+// ==================== MAIN ACTIVITY ====================
 public class MainActivity extends AppCompatActivity {
 
-    android.widget.Button mcalculatebmi;
+    // UI Components
+    Button mcalculatebmi;
     TextView mcurrentheight, mcurrentage, mcurrentweight;
     ImageView mincrementage, mincrementweight, mdecrementweight, mdecrementage;
     SeekBar mseekbarforheight;
     RelativeLayout mmale, mfemale;
 
-    int intweight = 55;
-    int intage = 22;
-    int currentprogress = 170;
-    String typeofuser = "0";
+    // Pattern instances
+    private MainFacade facade;
+    private ButtonCommandInvoker invoker;
+    private CommandFactory commandFactory;
+    private UIObserver uiObserver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
 
+        
+        initUI();
+        initPatterns();
+        setupSeekBar();
+        setupButtons();
+    }
+
+    private void initUI() {
+        // Find all views
         mcalculatebmi = findViewById(R.id.calculatebmi);
         mcurrentage = findViewById(R.id.currentage);
         mcurrentweight = findViewById(R.id.currentweight);
@@ -45,76 +349,110 @@ public class MainActivity extends AppCompatActivity {
         mmale = findViewById(R.id.male);
         mfemale = findViewById(R.id.female);
 
-        mmale.setOnClickListener(v -> {
-            mmale.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.malefemalefocus));
-            mfemale.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.malefemalenotfocus));
-            typeofuser = "Male";
-        });
-
-        mfemale.setOnClickListener(v -> {
-            mfemale.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.malefemalefocus));
-            mmale.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.malefemalenotfocus));
-            typeofuser = "Female";
-        });
-
+        
         mseekbarforheight.setMax(250);
-        mseekbarforheight.setProgress(currentprogress);
-        mcurrentheight.setText(String.valueOf(currentprogress));
+        mseekbarforheight.setProgress(170);
+    }
 
+    private void initPatterns() {
+        facade = new MainFacade();
+        
+        invoker = new ButtonCommandInvoker();
+        
+        commandFactory = new CommandFactory(this);
+        
+        uiObserver = new UIObserver(this);
+        facade.getData().registerObserver(uiObserver);
+        
+        facade.getData().setHeight(170);
+    }
+
+    private void setupSeekBar() {
         mseekbarforheight.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
+            @Override 
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                currentprogress = progress;
-                mcurrentheight.setText(String.valueOf(currentprogress));
+                facade.getData().setHeight(progress);
             }
-
-            @Override
+            
+            @Override 
             public void onStartTrackingTouch(SeekBar seekBar) {}
-
-            @Override
+            
+            @Override 
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+    }
 
-        mincrementage.setOnClickListener(v -> {
-            intage++;
-            mcurrentage.setText(String.valueOf(intage));
+    private void setupButtons() {
+        mincrementage.setOnClickListener(v -> execute("increment_age"));
+        mdecrementage.setOnClickListener(v -> execute("decrement_age"));
+        
+        mincrementweight.setOnClickListener(v -> execute("increment_weight"));
+        mdecrementweight.setOnClickListener(v -> execute("decrement_weight"));
+        
+        mmale.setOnClickListener(v -> {
+            facade.setGenderStrategy(new MaleStrategy());
+            updateGenderBackground("Male");
         });
+        
+        mfemale.setOnClickListener(v -> {
+            facade.setGenderStrategy(new FemaleStrategy());
+            updateGenderBackground("Female");
+        });
+        
+        mcalculatebmi.setOnClickListener(v -> execute("calculate"));
+    }
 
-        mdecrementage.setOnClickListener(v -> {
-            if (intage > 1) {
-                intage--;
-                mcurrentage.setText(String.valueOf(intage));
-            }
-        });
+    private void execute(String type) {
+        Command cmd = commandFactory.createCommand(type);
+        if (cmd != null) {
+            invoker.setCommand(cmd);
+            invoker.executeCommand();
+        }
+    }
 
-        mincrementweight.setOnClickListener(v -> {
-            intweight++;
-            mcurrentweight.setText(String.valueOf(intweight));
-        });
+    public void incrementAge() {
+        int currentAge = facade.getData().getAge();
+        facade.getData().setAge(currentAge + 1);
+    }
 
-        mdecrementweight.setOnClickListener(v -> {
-            if (intweight > 1) {
-                intweight--;
-                mcurrentweight.setText(String.valueOf(intweight));
-            }
-        });
+    public void decrementAge() {
+        int currentAge = facade.getData().getAge();
+        if (currentAge > 1) {
+            facade.getData().setAge(currentAge - 1);
+        }
+    }
 
-        mcalculatebmi.setOnClickListener(v -> {
-            if (typeofuser.equals("0")) {
-                Toast.makeText(getApplicationContext(), "Select Your Gender First", Toast.LENGTH_SHORT).show();
-            } else if (currentprogress == 0) {
-                Toast.makeText(getApplicationContext(), "Select Your Height First", Toast.LENGTH_SHORT).show();
-            } else if (intage <= 0) {
-                Toast.makeText(getApplicationContext(), "Age Is Incorrect", Toast.LENGTH_SHORT).show();
-            } else if (intweight <= 0) {
-                Toast.makeText(getApplicationContext(), "Weight Is Incorrect", Toast.LENGTH_SHORT).show();
-            } else {
-                Intent intent = new Intent(MainActivity.this, bmiactivity.class);
-                intent.putExtra("gender", typeofuser);
-                intent.putExtra("height", String.valueOf(currentprogress));
-                intent.putExtra("weight", String.valueOf(intweight));
-                startActivity(intent);
-            }
-        });
+    public void incrementWeight() {
+        int currentWeight = facade.getData().getWeight();
+        facade.getData().setWeight(currentWeight + 1);
+    }
+
+    public void decrementWeight() {
+        int currentWeight = facade.getData().getWeight();
+        if (currentWeight > 1) {
+            facade.getData().setWeight(currentWeight - 1);
+        }
+    }
+
+    public void calculateAndNavigate() {
+        facade.validateAndLaunchBmiActivity(this);
+    }
+
+    public void updateGenderBackground(String gender) {
+        if ("Male".equals(gender)) {
+            mmale.setBackground(ContextCompat.getDrawable(this, R.drawable.malefemalefocus));
+            mfemale.setBackground(ContextCompat.getDrawable(this, R.drawable.malefemalenotfocus));
+        } else if ("Female".equals(gender)) {
+            mfemale.setBackground(ContextCompat.getDrawable(this, R.drawable.malefemalefocus));
+            mmale.setBackground(ContextCompat.getDrawable(this, R.drawable.malefemalenotfocus));
+        }
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (facade != null && uiObserver != null) {
+            facade.getData().removeObserver(uiObserver);
+        }
     }
 }
