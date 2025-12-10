@@ -11,7 +11,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
-// -------------------------  Singleton Pattern -------------------------
+// ------------------------- Singleton Pattern -------------------------
 class BMIManager {
     private static final BMIManager instance = new BMIManager();
     private float lastBmi;
@@ -32,7 +32,7 @@ class BMIManager {
     public String getLastCategory() { return lastCategory; }
 }
 
-// -------------------------  Strategy Pattern -------------------------
+// ------------------------- Strategy Pattern -------------------------
 interface IStrategy {
     String getCategory();
     int getBackgroundColor();
@@ -96,7 +96,7 @@ class SimpleBmiFactory {
     }
 }
 
-// -------------------------  Facade Pattern -------------------------
+// ------------------------- Facade Pattern -------------------------
 class BMIResultFacade {
     private TextView categoryView;
     private RelativeLayout background;

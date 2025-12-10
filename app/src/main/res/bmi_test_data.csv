@@ -1,0 +1,11 @@
+height,weight,expectedBMI,expectedCategory
+170,55,19.03,Normal
+180,50,15.43,Severe Thinness
+160,42,16.41,Moderate Thinness
+175,55,17.96,Mild Thinness
+170,70,24.22,Normal
+165,70,25.71,Overweight
+160,80,31.25,Obese Class I
+180,120,37.04,Obese Class I
+150,45,20.0,Normal
+200,100,25.0,Overweight
