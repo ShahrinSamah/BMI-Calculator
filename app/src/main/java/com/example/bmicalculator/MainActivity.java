@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat;
 import java.util.ArrayList;
 import java.util.List;
 
-// ==================== 1. COMMAND PATTERN ====================
+//Command Pattern
 interface Command {
     void execute();
 }
@@ -47,14 +47,14 @@ class CalculateBMICommand implements Command {
     @Override public void execute() { activity.calculateAndNavigate(); }
 }
 
-// Invoker — exactly like Waiter
+// Invoker — exactly like Waiter in teacher's example
 class ButtonCommandInvoker {
     private Command command;
     public void setCommand(Command command) { this.command = command; }
     public void executeCommand() { if (command != null) command.execute(); }
 }
 
-// ==================== 2. STRATEGY PATTERN ====================
+//Stategy Pattern
 interface GenderStrategy {
     String getGenderName();
 }
@@ -67,7 +67,7 @@ class FemaleStrategy implements GenderStrategy {
     @Override public String getGenderName() { return "Female"; }
 }
 
-// ==================== 3. OBSERVER PATTERN ====================
+//Observer Pattern
 interface Subject {
     void registerObserver(Observer o);
     void removeObserver(Observer o);
@@ -115,7 +115,7 @@ class UIObserver implements Observer {
     }
 }
 
-// ==================== 4. FACADE PATTERN ====================
+//Facade Pattern
 class MainFacade {
     private UserInputData data;
     private GenderStrategy strategy;
@@ -160,7 +160,7 @@ class MainFacade {
     }
 }
 
-// ==================== 5. FACTORY PATTERN ====================
+//Factory Pattern
 class CommandFactory {
     private MainActivity activity;
     public CommandFactory(MainActivity activity) { this.activity = activity; }
@@ -178,7 +178,7 @@ class CommandFactory {
     }
 }
 
-// ==================== MAIN ACTIVITY ====================
+//Main Activity
 public class MainActivity extends AppCompatActivity {
 
     // UI
